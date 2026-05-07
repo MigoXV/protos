@@ -1,0 +1,45 @@
+syntax = "proto3";
+import "google/protobuf/duration.proto";
+option java_multiple_files = true;
+option java_package = "com.ux.sd";
+option java_outer_classname = "UxSdProto";
+option go_package = "ulang.com/sd;sd";
+package ux_sd;
+
+service UxSpeakerDiarization {
+    rpc Detect(DetectRequest) returns (DetectResponse) {}
+    rpc DetectWav(DetectWavRequest) returns (DetectResponse) {}
+}
+
+message Config {
+    enum AudioEncoding {
+        // Not specified.
+        ENCODING_UNSPECIFIED = 0;
+        // 16位有符号pcm (little-endian)
+        LINEAR16 = 1;
+    }
+    // 音频编码
+    AudioEncoding encoding = 1;
+    // 采样率
+    uint32 sample_rate_hertz = 2;
+}
+
+message DetectWavRequest {
+    Config config = 1;
+    string          path = 2;
+}
+
+message DetectRequest {
+    Config config = 1;
+    bytes  audio = 2;
+}
+
+message DetectResponse {
+    repeated DetectionResult results = 1;
+}
+
+message DetectionResult {
+    google.protobuf.Duration start_time = 1;
+    google.protobuf.Duration end_time = 2;
+    uint32 speaker = 3;
+}

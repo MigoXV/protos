@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package textpostprocess;
+
+// 定义文本后处理服务
+service TextPostprocessService {
+  // 单条文本后处理
+  rpc Process (TextRequest) returns (TextResponse);
+}
+
+// 请求消息：输入原始文本
+message TextRequest {
+  string text = 1; // 输入文本
+}
+
+// 响应消息：输出处理后的文本
+message TextResponse {
+  string processed_text = 1; // 处理后的文本
+}
