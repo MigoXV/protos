@@ -1,6 +1,6 @@
 ---
 name: protos
-description: 使用 grpcio-tools 和 mypy-protobuf 从 .proto 文件生成 Python gRPC 与 Protobuf 代码。适用于需要查找 proto 文件、编写或修复 scripts/run_grpcio_tools.sh、生成 *_pb2.py、*_pb2.pyi、*_pb2_grpc.py、*_pb2_grpc.pyi、用 pip 而不是 poetry add 安装缺失生成工具，或确保 grpcio-tools 版本与已安装 grpcio 版本完全一致的场景。
+description: 使用 grpcio-tools 和 mypy-protobuf 从 .proto 文件生成 Python gRPC 与 Protobuf 代码，并接入内置语音服务协议。适用于需要查找 proto、编写或修复 scripts/run_grpcio_tools.sh、生成 *_pb2.py/pyi 与 *_pb2_grpc.py/pyi、匹配 grpcio-tools 和 grpcio 版本，或调用 TTS 服务用参考 WAV 克隆音色并合成音频的场景。
 ---
 
 # Protos
@@ -25,6 +25,26 @@ description: 使用 grpcio-tools 和 mypy-protobuf 从 .proto 文件生成 Pytho
 - `protos/ux_denoise.proto`：语音降噪协议，支持离线 `Denoise` 和流式 `StreamingDenoise`，输入输出都通过编码和采样率配置描述，音频负载为 PCM bytes。
 - `protos/ux_speaker_diarization.proto`：说话人分离协议，支持 PCM bytes 和 wav 路径输入，输出多个带开始时间、结束时间和 speaker 编号的片段。
 - `protos/text_postprocess.proto`：文本后处理协议，输入原始文本，输出处理后的文本，适合标点、格式规整、文本规范化等后处理链路。
+- `protos/tts.proto`：TTS 协议。`Synthesize` 接收参考音色或预置音色并以服务端流返回 PCM S16LE；`DuplexSynthesize` 使用双向流，首包必须是 `DuplexStreamConfig`，后续包再发送 `text_chunk`。参考音色输入必须提供 PCM S16LE bytes 和真实采样率；已知参考音频转写时同时提供 `ref_text`，未知时可留空并以服务能力为准。
+
+## TTS 音色克隆
+
+使用 `scripts/synthesize_tts.py` 调用 `TtsService.Synthesize`。脚本会校验参考 WAV、临时生成客户端、按 `chunk_index` 到达顺序拼接 PCM，并写成单声道 16-bit WAV：
+
+```bash
+python scripts/synthesize_tts.py \
+  --target 127.0.0.1:50004 \
+  --reference data-bin/rita.wav \
+  --output data-bin/rita-cloned.wav \
+  --text "你好，这是一段音色克隆测试。" \
+  --language Chinese \
+  --ref-text "参考音频的准确转写"
+```
+
+- 优先提供参考音频的准确转写；不要臆造 `ref_text`。服务支持无转写克隆时，省略 `--ref-text`。
+- 参考 WAV 必须为未压缩 PCM、16-bit、单声道；从 WAV 帧中提取裸 PCM 后再填入 `pcm_s16le`，不要把 RIFF/WAV 文件头一并发送。
+- 使用响应中的 `sample_rate` 写输出 WAV，不要假定它与参考音频一致。
+- 首次接入先用短文本验证 `Synthesize`；只有需要边输入文本边接收音频时再使用 `DuplexSynthesize`。
 
 ## 依赖规则
 
@@ -63,6 +83,11 @@ cd "${PROJECT_ROOT}"
 
 if command -v poetry >/dev/null 2>&1 && [[ -f "pyproject.toml" ]]; then
   PYTHON=(poetry run python)
+elif [[ -x ".venv/bin/python" ]]; then
+  PYTHON=(.venv/bin/python)
+  export PATH="${PROJECT_ROOT}/.venv/bin:${PATH}"
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON=(python3)
 else
   PYTHON=(python)
 fi
