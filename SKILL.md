@@ -20,7 +20,7 @@ description: 使用 grpcio-tools 和 mypy-protobuf 从 .proto 文件生成 Pytho
 
 - `protos/engine.proto`：综合引擎协议，包含 VAD、SID 特征提取、训练、比对、聚类和扩展分析。由于各方法之间存在较大冗余，接入时建议优先只使用 `Feature`，它主要用于基于 `sidAlg` 从 PCM 提取 SID 特征；`Compare` 可能有效，可按实际服务验证后使用；`FeatureWav`、`CompareWav` 等 Wav 系列以及其他方法一般不建议使用。`Extended` 可结合 `lidAlg`、`gidAlg` 做扩展结果输出。
 - `protos/lid.proto`：语言识别协议，`Process` 输入 PCM 及采样参数后直接返回分类结果 `lang` 和置信分数 `score`；`GetLanguages` 返回可用语言映射。
-- `protos/ux_vad.proto`：语音活动检测协议，支持离线 `Detect` 和在线双向流式 `StreamingDetect`。在线接口可能是同步帧级输出：某一帧输入后如果暂时找不到语音开始或结束，返回的左边界或右边界可能小于 0，常见值为 `-1`。
+- `protos/ux_vad.proto`：语音活动检测协议，支持离线 `Detect` 和在线双向流式 `StreamingDetect`。`DetectionConfig.postprocessing` 可携带请求级后处理配置：`processor` 是后处理器稳定标识，`version` 是参数结构版本，`parameters` 是 `google.protobuf.Struct`；未设置时应使用服务端默认值。流式调用只在首包配置中绑定它，后续音频包不能修改。在线接口可能是同步帧级输出：某一帧输入后如果暂时找不到语音开始或结束，返回的左边界或右边界可能小于 0，常见值为 `-1`。
 - `protos/ux_speech.proto`：流式语音识别协议，首包发送 `StreamingRecognitionConfig`，后续发送音频；响应包含转写文本、词级时间戳、临时/最终结果标记，以及说话人、语种、说话人切换和轮次完成等扩展信息。
 - `protos/ux_denoise.proto`：语音降噪协议，支持离线 `Denoise` 和流式 `StreamingDenoise`，输入输出都通过编码和采样率配置描述，音频负载为 PCM bytes。
 - `protos/ux_speaker_diarization.proto`：说话人分离协议，支持 PCM bytes 和 wav 路径输入，输出多个带开始时间、结束时间和 speaker 编号的片段。
