@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
 
 option java_multiple_files = true;
 option java_package = "com.ux.vad";
@@ -31,13 +32,27 @@ message DetectionConfig {
     // 16位有符号pcm (little-endian)
     LINEAR16 = 1;
   }
-  
+
   // 音频编码
   AudioEncoding encoding = 1;
 
   // 采样率
   uint32 sample_rate_hertz = 2;
-  
+
+  // 请求级后处理配置；未设置时使用引擎默认值。
+  PostprocessingOptions postprocessing = 3;
+
+}
+
+message PostprocessingOptions {
+  // 后处理器的稳定标识，由具体 VAD 引擎解释。
+  string processor = 1;
+
+  // 参数结构版本。
+  uint32 version = 2;
+
+  // 后处理器私有参数。
+  google.protobuf.Struct parameters = 3;
 }
 
 message DetectResponse {
@@ -59,5 +74,5 @@ message StreamingDetectRequest {
 message StreamingDetectResponse {
   repeated DetectionResult results = 1;
   //已处理的时长
-  google.protobuf.Duration processed_time = 2; 
+  google.protobuf.Duration processed_time = 2;
 }
