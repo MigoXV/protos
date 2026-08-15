@@ -23,7 +23,7 @@ description: 使用 grpcio-tools 和 mypy-protobuf 从 .proto 文件生成 Pytho
 - `protos/ux_vad.proto`：语音活动检测协议，支持离线 `Detect` 和在线双向流式 `StreamingDetect`。`DetectionConfig.postprocessing` 可携带请求级后处理配置：`processor` 是后处理器稳定标识，`version` 是参数结构版本，`parameters` 是 `google.protobuf.Struct`；未设置时应使用服务端默认值。流式调用只在首包配置中绑定它，后续音频包不能修改。在线接口可能是同步帧级输出：某一帧输入后如果暂时找不到语音开始或结束，返回的左边界或右边界可能小于 0，常见值为 `-1`。
 - `protos/ux_speech.proto`：流式语音识别协议，首包发送 `StreamingRecognitionConfig`，后续发送音频；响应包含转写文本、词级时间戳、临时/最终结果标记，以及说话人、语种、说话人切换和轮次完成等扩展信息。
 - `protos/ux_denoise.proto`：语音降噪协议，支持离线 `Denoise` 和流式 `StreamingDenoise`，输入输出都通过编码和采样率配置描述，音频负载为 PCM bytes。
-- `protos/ux_speaker_diarization.proto`：说话人分离协议，支持 PCM bytes 和 wav 路径输入，输出多个带开始时间、结束时间和 speaker 编号的片段。
+- `protos/ux_speaker_diarization.proto`：说话人分离协议，`Detect` 接收 `LINEAR16` PCM bytes 和采样率，返回带开始时间、结束时间和无符号 `speaker` 编号的片段；`StreamingDetect` 使用一元请求、服务端流式返回相同的响应类型。该协议不包含 wav 路径输入。
 - `protos/text_postprocess.proto`：文本后处理协议，输入原始文本，输出处理后的文本，适合标点、格式规整、文本规范化等后处理链路。
 - `protos/tts.proto`：TTS 协议。`Synthesize` 接收参考音色或预置音色并以服务端流返回 PCM S16LE；`DuplexSynthesize` 使用双向流，首包必须是 `DuplexStreamConfig`，后续包再发送 `text_chunk`。参考音色输入必须提供 PCM S16LE bytes 和真实采样率；已知参考音频转写时同时提供 `ref_text`，未知时可留空并以服务能力为准。
 
