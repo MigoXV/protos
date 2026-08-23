@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--proto",
         type=Path,
-        default=Path(__file__).resolve().parents[1] / "protos" / "tts.proto",
+        default=Path(__file__).resolve().parents[1] / "protos" / "tts" / "tts.proto",
     )
     return parser.parse_args()
 

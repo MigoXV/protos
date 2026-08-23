@@ -25,7 +25,8 @@ description: 使用 grpcio-tools 和 mypy-protobuf 从 .proto 文件生成 Pytho
 - `protos/ux_denoise.proto`：语音降噪协议，支持离线 `Denoise` 和流式 `StreamingDenoise`，输入输出都通过编码和采样率配置描述，音频负载为 PCM bytes。
 - `protos/ux_speaker_diarization.proto`：说话人分离协议，`Detect` 接收 `LINEAR16` PCM bytes 和采样率，返回带开始时间、结束时间和无符号 `speaker` 编号的片段；`StreamingDetect` 使用一元请求、服务端流式返回相同的响应类型。该协议不包含 wav 路径输入。
 - `protos/text_postprocess.proto`：文本后处理协议，输入原始文本，输出处理后的文本，适合标点、格式规整、文本规范化等后处理链路。
-- `protos/tts.proto`：TTS 协议。`Synthesize` 接收参考音色或预置音色并以服务端流返回 PCM S16LE；`DuplexSynthesize` 使用双向流，首包必须是 `DuplexStreamConfig`，后续包再发送 `text_chunk`。参考音色输入必须提供 PCM S16LE bytes 和真实采样率；已知参考音频转写时同时提供 `ref_text`，未知时可留空并以服务能力为准。
+- `protos/tts/tts.proto`：TTS 合成协议。`Synthesize` 接收参考音色或预置音色并以服务端流返回 PCM S16LE；`DuplexSynthesize` 使用双向流，首包必须是 `DuplexStreamConfig`，后续包再发送 `text_chunk`。参考音色输入必须提供 PCM S16LE bytes 和真实采样率；已知参考音频转写时同时提供 `ref_text`，未知时可留空并以服务能力为准。
+- `protos/tts/preset_voice.proto`：预置音色查询协议，使用 `PresetVoiceService.ListPresetVoices` 获取实例中的音色清单及可用能力。
 
 ## TTS 音色克隆
 
