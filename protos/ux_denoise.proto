@@ -11,6 +11,10 @@ service UxDenoise {
   rpc Denoise(DenoiseRequest) returns (DenoiseResponse) {}
   rpc StreamingDenoise(stream StreamingDenoiseRequest)
       returns (stream StreamingDenoiseResponse) {}
+  // 同步返回逐采样点对齐的原始音频和降噪音频。
+  // 为保证audio_in是未经重采样的原始PCM，输入、输出采样率必须相同。
+  rpc SynchronizedStreamingDenoise(stream StreamingDenoiseRequest)
+      returns (stream SynchronizedStreamingDenoiseResponse) {}
 }
 
 message DenoiseRequest {
@@ -52,3 +56,10 @@ message StreamingDenoiseRequest {
 }
 
 message StreamingDenoiseResponse { bytes audio_out = 1; }
+
+message SynchronizedStreamingDenoiseResponse {
+  // 与audio_out逐采样点对齐的原始LINEAR16 PCM。
+  bytes audio_in = 1;
+  // 降噪后的LINEAR16 PCM，字节数始终与audio_in相同。
+  bytes audio_out = 2;
+}
